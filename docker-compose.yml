@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: rms-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: rms_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - rms-network
+
+  # Node.js Backend API
+  backend:
+    build: .
+    container_name: rms-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/rms_db?authSource=admin
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your-secret-key}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-key}
+      CORS_ORIGIN: http://localhost:4200
+    depends_on:
+      - mongodb
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - rms-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  rms-network:
+    driver: bridge
