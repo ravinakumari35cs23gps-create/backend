@@ -3,7 +3,9 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+        // Use MongoDB Atlas in production, fallback to local MongoDB in development
+    const dbURI = process.env.NODE_ENV === 'production' ? process.env.MONGODB_ATLAS_URI : process.env.MONGODB_URI;
+    const conn = await mongoose.connect(dbURI);
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
     

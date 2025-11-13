@@ -1,17 +1,41 @@
-# Node.js Backend Dockerfile
-FROM node:18-alpine
+# Multi-stage build for Node.js Backend with Angular Frontend
+FROM node:18-alpine AS frontend-build
+
+# Install Angular CLI globally
+RUN npm install -g @angular/cli
+
+# Set working directory for frontend
+WORKDIR /app/my-app
+
+# Copy frontend package files
+COPY my-app/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source code
+COPY my-app/ .
+
+# Build Angular app
+RUN npm run build
+
+# Backend stage
+FROM node:18-alpine AS backend
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
-# Install dependencies
+# Install backend dependencies
 RUN npm ci --only=production
 
-# Copy source code
-COPY . .
+# Copy backend source code
+COPY backend/ .
+
+# Copy built frontend files
+COPY --from=frontend-build /app/my-app/dist/my-app ./my-app/dist/my-app
 
 # Create logs directory
 RUN mkdir -p logs

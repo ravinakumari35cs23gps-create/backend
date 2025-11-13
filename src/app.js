@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
+const fs = require('fs');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const logger = require('./utils/logger');
@@ -14,7 +16,6 @@ const resultRoutes = require('./routes/resultRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const path = require('path');
 // Initialize Express app
 const app = express();
 
@@ -57,6 +58,10 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 const _dirname = path.resolve();
+// Ensure the dist directory exists
+if (!fs.existsSync(path.join(_dirname, '/my-app/dist/my-app'))) {
+  console.warn('Angular build directory not found, frontend routes will not work');
+}
 // Rate limiting
 app.use('/api/', apiLimiter);
 
@@ -101,35 +106,36 @@ app.get(`/api/${API_VERSION}`, (_, res) => {
 });
 
 // Serve static files from Angular app
-app.use(express.static(path.join(_dirname, "/my-app/dist/my-app")));
+const angularDistPath = path.join(_dirname, '/my-app/dist/my-app');
+app.use(express.static(angularDistPath));
 
 // Catch-all route - serve Angular app for all non-API routes
 app.get('/', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/admin/:path', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/teacher', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/teacher/:path', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/student', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 app.get('/student/:path', (req, res) => {
-  res.sendFile(path.join(_dirname, "/my-app/dist/my-app/index.html"));
+  res.sendFile(path.join(angularDistPath, 'index.html'));
 });
 
 // 404 handler for API
